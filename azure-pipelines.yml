@@ -21,14 +21,7 @@ stages:
       vmImage: windows-latest
     steps:
     - task: Docker@2
-      displayName: Build an image
       inputs:
-        command: 'build'
+        command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
         buildContext: '.'
-        tags: '$(tag)'
-        
-    - task: Docker@2
-      inputs:
-        command: 'push'
-        tags: '$(tag)'
