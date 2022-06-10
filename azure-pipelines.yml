@@ -8,21 +8,22 @@ trigger:
     include:
       #- develop
       - feature/azure*
-  paths:
-    include:
-      - src/*
 
 variables:
   buildConfiguration: "Release"
   artifactName: "testing-drop"
   artifactDirProject: "Project"
-  buildPathRootProject: "MyApi1"
+  buildPathRootProject: "MyAPI1"
   buildPathProject: "$(buildPathRootProject)/*.csproj"
   shouldRestoreProject: true
+
+
 
 jobs:
   - job: TestAzurePipeline
     displayName: "Test Azure Pipeline"
+    pool:
+      vmImage: 'windows-latest'
     steps:
     - task: NuGetToolInstaller@1
       inputs:
@@ -43,7 +44,7 @@ jobs:
         command: 'restore'
         projects: '$(buildPathProject)'
         feedsToUse: 'config'
-        nugetConfigPath: 'src/NuGet.Config'
+        nugetConfigPath: 'NuGet.Config'
 
     - task: DotNetCoreCLI@2
       displayName: 'Project | Build'
