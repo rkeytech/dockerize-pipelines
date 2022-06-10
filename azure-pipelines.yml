@@ -25,5 +25,5 @@ stages:
       inputs:
         command: 'build'
         Dockerfile: '**/Dockerfile'
-        buildContext: '../'
+        buildContext: '.'
         tags: '$(tag)'
