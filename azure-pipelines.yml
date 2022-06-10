@@ -66,4 +66,4 @@ jobs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(artifactDIrProject)'
         ArtifactName: '$(artifactName)'
         publishLocation: Container
-      enabled: false
+      enabled: true
