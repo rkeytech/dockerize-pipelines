@@ -16,7 +16,7 @@ variables:
   buildConfiguration: "Release"
   artifactName: "testing-drop"
   artifactDirProject: "Project"
-  buildPathRootProject: "src/Client/Web/Server"
+  buildPathRootProject: "MyApi1"
   buildPathProject: "$(buildPathRootProject)/*.csproj"
   shouldRestoreProject: true
 
