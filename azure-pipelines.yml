@@ -27,12 +27,7 @@ stages:
         Dockerfile: '**/Dockerfile'
         buildContext: '.'
         tags: '$(tag)'
-  - job: Push
-    displayName: Push docker
-    pool:
-      vmImage: windows-latest
-    dependsOn: Build
-    steps:
+        
     - task: Docker@2
       inputs:
         command: 'push'
