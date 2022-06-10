@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  myapi1:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${DOCKER_ENV}
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${KESTREL_CERTIFICATES_PASSWD}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=${KESTREL_CERTIFICATES_PATH}
+    ports:
+      - "5000:80"
+      - "5001:443"
+    volumes:
+      #- ${APPDATA}/ASP.NET/Https:C:\Users\ContainerUser\AppData\Roaming\ASP.NET\Https:ro
+      - ${APPDATA}/Microsoft/UserSecrets:C:\Users\ContainerUser\AppData\Roaming\Microsoft\UserSecrets:ro
+      - ${USERPROFILE}\.aspnet\https:C:\https:rw
+  myapi2:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${DOCKER_ENV}
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${KESTREL_CERTIFICATES_PASSWD}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=${KESTREL_CERTIFICATES_PATH}
+    ports:
+      - "9000:80"
+      - "9001:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:C:\Users\ContainerUser\AppData\Roaming\Microsoft\UserSecrets:ro
+      - ${USERPROFILE}\.aspnet\https:C:\https:rw

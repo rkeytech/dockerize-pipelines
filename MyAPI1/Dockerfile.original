@@ -1,0 +1,34 @@
+#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+#Depending on the operating system of the host machines(s) that will build or run the containers, the image specified in the FROM statement may need to be changed.
+#For more information, please see https://aka.ms/containercompat
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+#ARG ARG_NUGET_FEED_USERNAME
+#ENV NUGET_FEED_USERNAME=${ARG_NUGET_FEED_USERNAME}
+#ARG ARG_NUGET_FEED_PASSWORD
+#ENV NUGET_FEED_PASSWORD=${ARG_NUGET_FEED_PASSWORD}
+WORKDIR /app
+
+# It can be used only for documentation on knowing which ports the container exposes
+# !It doesn't affect the ports of the container!
+EXPOSE 5000
+EXPOSE 5001
+
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR /src
+COPY ["MyAPI1/MyAPI1.csproj", "MyAPI1/"]
+#RUN echo "$NUGET_FEED_USERNAME"
+#RUN echo "$NUGET_FEED_PASSWORD"
+RUN dotnet restore "MyAPI1/MyAPI1.csproj"
+COPY . .
+WORKDIR "/src/MyAPI1"
+RUN dotnet build "MyAPI1.csproj" -c Release -o /app/build --no-restore
+
+FROM build AS publish
+RUN dotnet publish "MyAPI1.csproj" -c Release -o /app/publish --no-restore
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "MyAPI1.dll"]
