@@ -1,4 +1,8 @@
+using System.Globalization;
+using System.Reflection;
+using System.Resources;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
 
 namespace MyAPI1.Controllers
 {
@@ -8,8 +12,8 @@ namespace MyAPI1.Controllers
     {
         private static readonly string[] Summaries = new[]
         {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        };
 
         private readonly ILogger<WeatherForecastController> _logger;
 
@@ -18,16 +22,34 @@ namespace MyAPI1.Controllers
             _logger = logger;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        [HttpGet(template: "{error}/{errorType}")]
+        public IEnumerable<WeatherForecast> Get(string error, string? errorType)
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var mockError = error.Equals(value: "true");
+
+            _logger.LogInformation($"Executing weather forecast controller with mock error = {mockError}");
+            if (mockError)
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+                switch (errorType)
+                {
+                    case "argumentNull":
+                        throw new ArgumentNullException();
+                    case "argumentOutRange":
+                        throw new ArgumentOutOfRangeException();
+                    case "keyNotFound":
+                        throw new KeyNotFoundException();
+                    default:
+                        throw new ApplicationException();
+                }
+            }
+
+            return Enumerable.Range(start: 1, count: 5).Select(selector: index => new WeatherForecast
+                {
+                    Date = DateTime.Now.AddDays(value: index),
+                    TemperatureC = Random.Shared.Next(minValue: -20, maxValue: 55),
+                    Summary = Summaries[Random.Shared.Next(maxValue: Summaries.Length)]
+                })
+                .ToArray();
         }
     }
 }
