@@ -1,4 +1,3 @@
-using System.Globalization;
 using ExceptionsLibrary.Middlewares;
 using Microsoft.Net.Http.Headers;
 
@@ -29,7 +28,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 
 app.UseHttpsRedirection();
 
