@@ -1,8 +1,3 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
   branches:
     include:
@@ -19,6 +14,8 @@ variables:
   shouldRestoreProject: true
   buildVersion: ''
   fileVersion: ''
+
+name: $(buildVersion)
 
 jobs:
   - job: TestAzurePipeline
@@ -56,8 +53,6 @@ jobs:
           echo $fileVersion
           echo "##vso[task.setvariable variable=buildVersion]$buildVersion"
           echo "##vso[task.setvariable variable=fileVersion]$fileVersion"
-          $env:BUILD_VER = $fileVersion
-          echo "$env:BUILD_VER"
 
     - script: echo %Action%%BuildVersion%
       displayName: "Solution | Set build version"
@@ -103,8 +98,7 @@ jobs:
         nobuild: true
         includesymbols: true
         includesource: true
-        versioningScheme: byEnvVar
-        versionEnvVar: "env:BUILD_VER"
+        versioningScheme: byBuildNumber
     - task: DotNetCoreCLI@2
       displayName: 'Project | Nuget Push'
       inputs:
