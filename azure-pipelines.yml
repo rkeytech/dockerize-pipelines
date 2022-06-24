@@ -15,8 +15,6 @@ variables:
   buildVersion: ''
   fileVersion: ''
 
-name: $(buildVersion)
-
 jobs:
   - job: TestAzurePipeline
     displayName: "Test Azure Pipeline"
@@ -80,12 +78,12 @@ jobs:
         command: 'publish'
         publishWebProjects: false
         projects: '$(buildPathProject)'
-        arguments: '--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(Build.ArtifactStagingDirectory)/$(artifactDirProject)'
+        arguments: '--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(build.artifactstagingdirectory)/$(artifactDirProject)'
         zipAfterPublish: true
     - task: PublishBuildArtifacts@1
       displayName: 'Project | Publish Artifact'
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(artifactDirProject)'
+        PathtoPublish: '$(build.artifactstagingdirectory)/$(artifactDirProject)'
         ArtifactName: '$(artifactName)'
         publishLocation: Container
       enabled: true
@@ -94,7 +92,7 @@ jobs:
       inputs:
         command: 'pack'
         packagesToPack: "$(buildPathProject)"
-        packDirectory: "$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)"
+        packDirectory: "$(build.artifactstagingdirectory)/packages/$(artifactDirProject)"
         nobuild: true
         includesymbols: true
         includesource: true
@@ -103,7 +101,7 @@ jobs:
       displayName: 'Project | Nuget Push'
       inputs:
         command: 'push'
-        packagesToPush: "$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)/*.nupkg"
+        packagesToPush: "$(build.artifactstagingdirectory)/packages/$(artifactDirProject)/*.nupkg"
         nuGetFeedType: 'internal'
         publishVstsFeed: 'e632e806-6077-41a6-8789-41cc36178f28'
       continueOnError: true
