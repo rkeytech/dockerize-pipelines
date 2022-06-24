@@ -83,13 +83,11 @@ jobs:
       displayName: 'Project | Pack'
       inputs:
         command: 'pack'
-        packagesToPack: '$(buildPathProject)'
     
     - task: DotNetCoreCLI@2
       displayName: 'Project | Nuget Push'
       inputs:
         command: 'push'
-        packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
         nuGetFeedType: 'internal'
         publishVstsFeed: 'e632e806-6077-41a6-8789-41cc36178f28'
 
