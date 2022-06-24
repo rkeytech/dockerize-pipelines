@@ -56,7 +56,7 @@ jobs:
           echo $fileVersion
           echo "##vso[task.setvariable variable=buildVersion]$buildVersion"
           echo "##vso[task.setvariable variable=fileVersion]$fileVersion"
-          Set-Variable -Name BUILD_VER -Value "$fileVersion"
+          $env:BUILD_VER = $fileVersion
           echo "$env:BUILD_VER"
 
     - script: echo %Action%%BuildVersion%
