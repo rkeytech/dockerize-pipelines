@@ -67,7 +67,8 @@ jobs:
       inputs:
         command: 'build'
         projects: '$(buildPathProject)'
-        arguments: '--configuration $(buildConfiguration) -p:Version=2.0.0-azure-pipeline-setup.1;FileVersion=2.0.0'
+        arguments: "--configuration $(buildConfiguration) -p:Version=$(buildVersion);FileVersion=$(buildVersion)"
+
 
     - task: DotNetCoreCLI@2
       displayName: 'Project | Publish'
@@ -79,12 +80,13 @@ jobs:
         zipAfterPublish: true
     
     - task: DotNetCoreCLI@2
+      displayName: 'Project | Pack'
       inputs:
         command: 'pack'
         packagesToPack: '$(buildPathProject)'
-        versioningScheme: 'byBuildNumber'
     
     - task: DotNetCoreCLI@2
+      displayName: 'Project | Nuget Push'
       inputs:
         command: 'push'
         packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
