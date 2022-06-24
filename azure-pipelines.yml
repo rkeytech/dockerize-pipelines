@@ -95,7 +95,7 @@ jobs:
         packagesToPack: "$(buildPathProject)"
         packDirectory: '$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)'
         nobuild: true
-        includesymbols: true
+        includesymbols: false
         includesource: true
         versioningScheme: byBuildNumber
     
