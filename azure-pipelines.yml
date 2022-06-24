@@ -50,7 +50,6 @@ jobs:
       env:
         BUILD_BUILDNUMBER: $(buildVersion)
           
-
     - script: echo %Action%%BuildVersion%
       displayName: "Solution | Set build version"
       env:
