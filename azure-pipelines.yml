@@ -104,7 +104,7 @@ jobs:
         includesymbols: true
         includesource: true
         versioningScheme: byEnvVar
-        versionEnvVar: "BUILD_VER"
+        versionEnvVar: "env:BUILD_VER"
     - task: DotNetCoreCLI@2
       displayName: 'Project | Nuget Push'
       inputs:
