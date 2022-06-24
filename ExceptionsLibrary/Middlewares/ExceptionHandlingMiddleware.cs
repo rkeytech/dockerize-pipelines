@@ -4,6 +4,9 @@ using System.Resources;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using ExceptionsLibrary.Resources;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Localization;
 
 namespace ExceptionsLibrary.Middlewares;
 
@@ -12,12 +15,17 @@ public class ExceptionHandlingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
     private readonly ResourceManager _rm;
+    private readonly IStringLocalizer _stringLocalizer;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger,
+        IStringLocalizerFactory factory)
     {
         _next = next;
         _logger = logger;
-
+        var type = typeof(SharedResource);
+        var assemblyName = new AssemblyName(type.GetTypeInfo().Assembly.FullName);
+        _stringLocalizer = factory.Create(nameof(SharedResource), assemblyName.Name);
+        //_stringLocalizer = factory.Create(type);
         //Thread.CurrentThread.CurrentUICulture = CultureInfo.CreateSpecificCulture("el-GR");
         _rm = new ResourceManager("ExceptionsLibrary.Resources.ExceptionMessages", Assembly.GetExecutingAssembly());
     }
@@ -36,10 +44,10 @@ public class ExceptionHandlingMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US", false);
+        //Thread.CurrentThread.CurrentUICulture = new CultureInfo("el-GR", false);
         context.Response.ContentType = "application/json";
         var response = context.Response;
-
+        var reqCulture = context.Features.Get<IRequestCultureFeature>();
         CoreException coreException;
         int statusCode;
         string exceptionMessage;
@@ -48,7 +56,12 @@ public class ExceptionHandlingMiddleware
         {
             case ArgumentNullException:
                 statusCode = (int)StatusCodes.Status400BadRequest;
-                exceptionMessage = _rm.GetString("ErrorArgumentNull") ?? string.Empty;
+                //exceptionMessage = _rm.GetString("ErrorArgumentNull") ?? string.Empty;
+                var newCulture = CultureInfo.CreateSpecificCulture("el-GR");
+                CultureInfo.CurrentCulture = newCulture;
+                CultureInfo.CurrentUICulture = newCulture;
+                var locMessage = _stringLocalizer["ErrorArgumentNull"];
+                exceptionMessage = _stringLocalizer["ErrorArgumentNull"];
                 coreException = new CoreException(exceptionMessage, statusCode)
                 {
                     TechnicalMessage = exception.Message

@@ -1,8 +1,3 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
   branches:
     include:
@@ -17,6 +12,8 @@ variables:
   buildPathRootProject: "MyAPI1"
   buildPathProject: "$(buildPathRootProject)/*.csproj"
   shouldRestoreProject: true
+  buildVersion: ''
+  fileVersion: ''
 
 jobs:
   - job: TestAzurePipeline
@@ -37,6 +34,30 @@ jobs:
       clean: true
 
     - task: DotNetCoreCLI@2
+      displayName: 'Install GitVersion'
+      inputs:
+        command: custom
+        custom: tool
+        arguments: 'install --global GitVersion.Tool --version 5.*'
+
+    - powershell: |
+          $buildVersion = dotnet-gitversion /output json /showvariable SemVer
+          $fileVersion = dotnet-gitversion /output json /showvariable MajorMinorPatch
+          echo "##vso[task.setvariable variable=buildVersion]$buildVersion"
+          echo "##vso[task.setvariable variable=fileVersion]$fileVersion"
+          Write-Host "$env:BUILD_BUILDNUMBER = $buildVersion"
+      displayName: 'Set Build Version from GitVersion'
+      env:
+        BUILD_BUILDNUMBER: $(buildVersion)
+          
+
+    - script: echo %Action%%BuildVersion%
+      displayName: "Solution | Set build version"
+      env:
+        Action: "##vso[build.updatebuildnumber]"
+        BuildVersion: $(buildVersion)
+
+    - task: DotNetCoreCLI@2
       displayName: 'Project | Restore'
       inputs:
         command: 'restore'
@@ -49,21 +70,41 @@ jobs:
       inputs:
         command: 'build'
         projects: '$(buildPathProject)'
-        arguments: '--configuration $(buildConfiguration) -p:Version=2.0.0-azure-pipeline-setup.1;FileVersion=2.0.0'
-
+        arguments: "--configuration $(buildConfiguration) -p:Version=$(buildVersion);FileVersion=$(fileVersion)"
+    
     - task: DotNetCoreCLI@2
       displayName: 'Project | Publish'
       inputs:
         command: 'publish'
         publishWebProjects: false
         projects: '$(buildPathProject)'
-        arguments: '--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(build.artifactstagingdirectory)/$(artifactDirProject)'
+        arguments: "--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         zipAfterPublish: true
-
+    
     - task: PublishBuildArtifacts@1
       displayName: 'Project | Publish Artifact'
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(artifactDIrProject)'
+        PathtoPublish: "$(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         ArtifactName: '$(artifactName)'
         publishLocation: Container
       enabled: true
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Project | Pack'
+      inputs:
+        command: 'pack'
+        packagesToPack: "$(buildPathProject)"
+        packDirectory: '$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)'
+        nobuild: true
+        includesymbols: true
+        includesource: true
+        versioningScheme: byBuildNumber
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Project | Nuget Push'
+      inputs:
+        command: 'push'
+        packagesToPush: '$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)/*.nupkg'
+        nuGetFeedType: 'internal'
+        publishVstsFeed: 'e632e806-6077-41a6-8789-41cc36178f28'
+      continueOnError: true
