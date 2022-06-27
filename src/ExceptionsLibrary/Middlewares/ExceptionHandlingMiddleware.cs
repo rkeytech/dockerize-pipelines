@@ -97,8 +97,8 @@ public class ExceptionHandlingMiddleware
                 break;
         }
 
-        _logger.LogWarning($"Technical Message: {coreException.TechnicalMessage}");
-        _logger.LogError($"Code: {coreException.StatusCode} | {coreException.UserMessage}");
+        _logger?.LogWarning($"Technical Message: {coreException.TechnicalMessage}");
+        _logger?.LogError($"Code: {coreException.StatusCode} | {coreException.UserMessage}");
         var result = JsonSerializer.Serialize(coreException);
         await context.Response.WriteAsync(result);
     }
