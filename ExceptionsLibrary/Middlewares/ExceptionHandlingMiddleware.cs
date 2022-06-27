@@ -13,9 +13,9 @@ namespace ExceptionsLibrary.Middlewares;
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+    private readonly ILogger<ExceptionHandlingMiddleware>? _logger;
     private readonly ResourceManager _rm;
-    private readonly IStringLocalizer _stringLocalizer;
+    private readonly IStringLocalizer? _stringLocalizer;
 
     public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger,
         IStringLocalizerFactory factory)
@@ -23,10 +23,13 @@ public class ExceptionHandlingMiddleware
         _next = next;
         _logger = logger;
         var type = typeof(SharedResource);
-        var assemblyName = new AssemblyName(type.GetTypeInfo().Assembly.FullName);
-        _stringLocalizer = factory.Create(nameof(SharedResource), assemblyName.Name);
-        //_stringLocalizer = factory.Create(type);
-        //Thread.CurrentThread.CurrentUICulture = CultureInfo.CreateSpecificCulture("el-GR");
+        var assemblyFullName = type.GetTypeInfo().Assembly.FullName;
+        if (assemblyFullName != null)
+        {
+            var assemblyName = new AssemblyName(assemblyFullName);
+            _stringLocalizer = factory.Create(nameof(SharedResource), assemblyName.Name);
+        }
+
         _rm = new ResourceManager("ExceptionsLibrary.Resources.ExceptionMessages", Assembly.GetExecutingAssembly());
     }
 
@@ -56,11 +59,9 @@ public class ExceptionHandlingMiddleware
         {
             case ArgumentNullException:
                 statusCode = (int)StatusCodes.Status400BadRequest;
-                //exceptionMessage = _rm.GetString("ErrorArgumentNull") ?? string.Empty;
                 var newCulture = CultureInfo.CreateSpecificCulture("el-GR");
                 CultureInfo.CurrentCulture = newCulture;
                 CultureInfo.CurrentUICulture = newCulture;
-                var locMessage = _stringLocalizer["ErrorArgumentNull"];
                 exceptionMessage = _stringLocalizer["ErrorArgumentNull"];
                 coreException = new CoreException(exceptionMessage, statusCode)
                 {
