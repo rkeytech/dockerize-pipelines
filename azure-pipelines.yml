@@ -104,22 +104,21 @@ jobs:
         publishLocation: Container
       enabled: true
     
-    - task: DotNetCoreCLI@2
+    - task: NugetCommand@2
       displayName: 'Project | Pack'
       inputs:
         command: 'pack'
         packagesToPack: "$(buildPathProject)"
-        packDirectory: '$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)'
-        nobuild: true
-        includesymbols: false
-        includesource: true
+        packDestination: '$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)'
         versioningScheme: byBuildNumber
     
-    - task: DotNetCoreCLI@2
+    - task: NugetCommand@2
       displayName: 'Project | Nuget Push'
       inputs:
         command: 'push'
         packagesToPush: $(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)/*
+        allowPackageConflicts: true
         nuGetFeedType: 'internal'
         publishVstsFeed: 'e632e806-6077-41a6-8789-41cc36178f28'
+        versioningScheme: byBuildNumber
       continueOnError: true
