@@ -1,9 +1,26 @@
 trigger:
+  batch: true
   branches:
     include:
-      - main
-      #- develop
-      #- feature/azure*
+      - features/*
+    exclude:
+      - features/experimental/*
+  paths:
+    exclude:
+      - README.md
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - features/*
+    exclude:
+      - features/experimental/*
+  paths:
+    exclude:
+      - README.md
+  drafts: false
+      
 
 variables:
   buildConfiguration: "Release"
