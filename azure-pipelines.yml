@@ -81,7 +81,7 @@ stages:
       displayName: 'Projects | Publish'
       inputs:
         command: 'publish'
-        publishWebProjects: true
+        publishWebProjects: false
         projects: '$(buildPathProject)'
         arguments: "--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         zipAfterPublish: true
