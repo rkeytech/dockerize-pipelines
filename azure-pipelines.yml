@@ -1,23 +1,16 @@
-# trigger:
-#   batch: "true"
-#   branches:
-#     include:
-#       - main
-#   paths:
-#     include:
-#       - src/Epsilon.Analyzers.Configuration/*
 pr:
   autoCancel: true
   branches:
     include:
-      - main
       - develop
+      - feature/*
   paths:
     include:
       - src/*
+      - azure-pipelines.yml
   drafts: false
 
-name: 'Epsilon Plutus CI Pipeline'
+name: 'Dockerize APIs CI Pipeline'
 
 pool:
   vmImage: 'windows-latest'
