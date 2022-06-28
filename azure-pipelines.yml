@@ -10,7 +10,7 @@ pr:
       - azure-pipelines.yml
   drafts: false
 
-name: 'Dockerize APIs CI Pipeline'
+name: 'Dockerize_APIs_CI_Pipeline'
 
 pool:
   vmImage: 'windows-latest'
@@ -23,7 +23,7 @@ variables:
   buildPathProject: "$(buildPathRootProject)/**/*.csproj"
 
 stages:
-- stage: Dockerize APIs CI
+- stage: Dockerize_APIs_CI
   jobs:
   - job: dockerize_apis_ci
     displayName: 'CI for Dockerize APIs Project'
@@ -45,7 +45,6 @@ stages:
       displayName: 'Install DotNet'
       inputs:
         packageType: 'sdk'
-        useGlobalJson: true
     - task: DotNetCoreCLI@2
       displayName: 'Install DotNet Tools'
       inputs:
@@ -73,7 +72,7 @@ stages:
       displayName: 'Projects | Publish'
       inputs:
         command: 'publish'
-        publishWebProjects: false
+        publishWebProjects: true
         projects: '$(buildPathProject)'
         arguments: "--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         zipAfterPublish: true
