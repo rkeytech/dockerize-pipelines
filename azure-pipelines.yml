@@ -54,6 +54,7 @@ stages:
       displayName: 'Install DotNet'
       inputs:
         packageType: 'sdk'
+        version: 6.x
     - task: DotNetCoreCLI@2
       displayName: 'Install DotNet Tools'
       inputs:
@@ -61,7 +62,7 @@ stages:
         custom: 'tool'
         arguments: 'restore'
     - script: |
-        dotnet tool run dotnet-gitversion $(Build.Repository.LocalPath) /output buildserver
+        dotnet tool run dotnet-gitversion /output buildserver
       name: Run_dotnet_gitversion
       displayName: 'Run GitVersion Tool'
     - task: DotNetCoreCLI@2
