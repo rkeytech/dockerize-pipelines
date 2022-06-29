@@ -1,19 +1,18 @@
 ﻿using System.Globalization;
 using System.Reflection;
 using System.Resources;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using ExceptionsLibrary.Resources;
-using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
 namespace ExceptionsLibrary.Middlewares;
 
 public class ExceptionHandlingMiddleware
 {
-    private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware>? _logger;
+    private readonly RequestDelegate _next;
     private readonly ResourceManager _rm;
     private readonly IStringLocalizer? _stringLocalizer;
 
@@ -49,8 +48,6 @@ public class ExceptionHandlingMiddleware
     {
         //Thread.CurrentThread.CurrentUICulture = new CultureInfo("el-GR", false);
         context.Response.ContentType = "application/json";
-        var response = context.Response;
-        var reqCulture = context.Features.Get<IRequestCultureFeature>();
         CoreException coreException;
         int statusCode;
         string exceptionMessage;
@@ -58,11 +55,11 @@ public class ExceptionHandlingMiddleware
         switch (exception)
         {
             case ArgumentNullException:
-                statusCode = (int)StatusCodes.Status400BadRequest;
+                statusCode = StatusCodes.Status400BadRequest;
                 var newCulture = CultureInfo.CreateSpecificCulture("el-GR");
                 CultureInfo.CurrentCulture = newCulture;
                 CultureInfo.CurrentUICulture = newCulture;
-                exceptionMessage = _stringLocalizer["ErrorArgumentNull"];
+                exceptionMessage = _stringLocalizer?["ErrorArgumentNull"];
                 coreException = new CoreException(exceptionMessage, statusCode)
                 {
                     TechnicalMessage = exception.Message
@@ -70,7 +67,7 @@ public class ExceptionHandlingMiddleware
                 break;
 
             case ArgumentOutOfRangeException:
-                statusCode = (int)StatusCodes.Status416RangeNotSatisfiable;
+                statusCode = StatusCodes.Status416RangeNotSatisfiable;
                 exceptionMessage = _rm.GetString("ErrorArgumentOutOfRange") ?? string.Empty;
                 coreException = new CoreException(exceptionMessage, statusCode)
                 {
@@ -79,7 +76,7 @@ public class ExceptionHandlingMiddleware
                 break;
 
             case KeyNotFoundException:
-                statusCode = (int)StatusCodes.Status404NotFound;
+                statusCode = StatusCodes.Status404NotFound;
                 exceptionMessage = _rm.GetString("ErrorKeyNotFound") ?? string.Empty;
                 coreException = new CoreException(exceptionMessage, statusCode)
                 {
@@ -88,7 +85,7 @@ public class ExceptionHandlingMiddleware
                 break;
 
             default:
-                statusCode = (int)StatusCodes.Status500InternalServerError;
+                statusCode = StatusCodes.Status500InternalServerError;
                 exceptionMessage = _rm.GetString("ErrorGeneric") ?? string.Empty;
                 coreException = new CoreException(exceptionMessage, statusCode)
                 {
