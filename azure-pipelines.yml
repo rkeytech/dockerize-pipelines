@@ -1,109 +1,94 @@
 trigger:
   branches:
     include:
-      - main
-      #- develop
-      #- feature/azure*
+      - feature/*
+  paths:
+    include:
+      - src/*
+      - azure-pipelines.yml
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - develop
+      - feature/*
+  paths:
+    include:
+      - src/*
+      - azure-pipelines.yml
+  drafts: false
+
+name: 'Dockerize_APIs_CI_Pipeline'
+
+pool:
+  vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: "Release"
-  artifactName: "testing-drop"
-  artifactDirProject: "Project"
-  buildPathRootProject: "MyAPI1"
-  buildPathProject: "$(buildPathRootProject)/*.csproj"
-  shouldRestoreProject: true
-  buildVersion: ''
-  fileVersion: ''
+  artifactName: "dockerizeAPIs-drop"
+  artifactDirProject: "dockerizeAPIs"
+  buildPathRootProject: "src/"
+  buildPathProject: "$(buildPathRootProject)/**/*.csproj"
 
-jobs:
-  - job: TestAzurePipeline
-    displayName: "Test Azure Pipeline"
-    pool:
-      vmImage: 'windows-latest'
+stages:
+- stage: Dockerize_APIs_CI
+  jobs:
+  - job: dockerize_apis_ci
+    displayName: 'CI for Dockerize APIs Project'
+
+    variables:
+      ${{ if eq(variables['configuration'], 'Debug') }}:
+        buildConfiguration: "Debug"
+    
     steps:
+    - checkout: self
+      displayName: 'Checkout code'
+      clean: "true"
     - task: NuGetToolInstaller@1
+      displayName: 'Install Nuget'
       inputs:
-        versionSpec: '6.x'
-
+        versionSpec: ">=6.2.0"
+        checkLatest: true
     - task: UseDotNet@2
+      displayName: 'Install DotNet'
       inputs:
         packageType: 'sdk'
-        version: '6.x'
-
-    - checkout: self
-      clean: true
-
+        version: 6.x
     - task: DotNetCoreCLI@2
-      displayName: 'Install GitVersion'
+      displayName: 'Install DotNet Tools'
       inputs:
-        command: custom
-        custom: tool
-        arguments: 'install --global GitVersion.Tool --version 5.*'
-
-    - powershell: |
-          $buildVersion = dotnet-gitversion /output json /showvariable SemVer
-          $fileVersion = dotnet-gitversion /output json /showvariable MajorMinorPatch
-          echo "##vso[task.setvariable variable=buildVersion]$buildVersion"
-          echo "##vso[task.setvariable variable=fileVersion]$fileVersion"
-          Write-Host "$env:BUILD_BUILDNUMBER = $buildVersion"
-      displayName: 'Set Build Version from GitVersion'
-      env:
-        BUILD_BUILDNUMBER: $(buildVersion)
-          
-    - script: echo %Action%%BuildVersion%
-      displayName: "Solution | Set build version"
-      env:
-        Action: "##vso[build.updatebuildnumber]"
-        BuildVersion: $(buildVersion)
-
+        command: 'custom'
+        custom: 'tool'
+        arguments: 'restore'
+    - script: |
+        dotnet tool run dotnet-gitversion /output buildserver
+      name: Run_dotnet_gitversion
+      displayName: 'Run GitVersion Tool'
     - task: DotNetCoreCLI@2
-      displayName: 'Project | Restore'
+      displayName: 'Projects | Restore'
       inputs:
         command: 'restore'
         projects: '$(buildPathProject)'
         feedsToUse: 'config'
         nugetConfigPath: 'NuGet.Config'
-
     - task: DotNetCoreCLI@2
-      displayName: 'Project | Build'
+      displayName: 'Projects | Build'
       inputs:
         command: 'build'
         projects: '$(buildPathProject)'
-        arguments: "--configuration $(buildConfiguration) -p:Version=$(buildVersion);FileVersion=$(fileVersion)"
-    
+        arguments: "--no-restore --configuration $(buildConfiguration) -p:Version=$(GitVersion.SemVer);FileVersion=$(GitVersion.MajorMinorPatch)"
     - task: DotNetCoreCLI@2
-      displayName: 'Project | Publish'
+      displayName: 'Projects | Publish'
       inputs:
         command: 'publish'
         publishWebProjects: false
         projects: '$(buildPathProject)'
         arguments: "--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         zipAfterPublish: true
-    
     - task: PublishBuildArtifacts@1
-      displayName: 'Project | Publish Artifact'
+      displayName: 'Projects | Publish Artifacts'
       inputs:
         PathtoPublish: "$(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
-        ArtifactName: '$(artifactName)'
         publishLocation: Container
-      enabled: true
-    
-    - task: DotNetCoreCLI@2
-      displayName: 'Project | Pack'
-      inputs:
-        command: 'pack'
-        packagesToPack: "$(buildPathProject)"
-        packDirectory: '$(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)'
-        nobuild: true
-        includesymbols: false
-        includesource: true
-        versioningScheme: byBuildNumber
-    
-    - task: DotNetCoreCLI@2
-      displayName: 'Project | Nuget Push'
-      inputs:
-        command: 'push'
-        packagesToPush: $(Build.ArtifactStagingDirectory)/packages/$(artifactDirProject)/*
-        nuGetFeedType: 'internal'
-        publishVstsFeed: 'e632e806-6077-41a6-8789-41cc36178f28'
-      continueOnError: true
+        ArtifactName: '$(artifactName)'
