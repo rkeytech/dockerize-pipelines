@@ -1,4 +1,5 @@
-mode: ContinuousDeployment
+assembly-versioning-scheme: MajorMinorPatchTag
+mode: ContinuousDelivery
 continuous-delivery-fallback-tag: ''
 next-version: 2.0.0
 branches:
