@@ -28,8 +28,8 @@ variables:
   buildConfiguration: "Release"
   artifactName: "dockerizeAPIs-drop"
   artifactDirProject: "dockerizeAPIs"
-  buildPathRootProject: "src/"
-  contextPathRootProject: "src/"
+  buildPathRootProject: "src"
+  contextPathRootProject: "src"
   buildPathProject: "$(buildPathRootProject)/**/*.csproj"
   dockerPathProject: "$(buildPathRootProject)/**/Dockerfile"
 
@@ -102,6 +102,8 @@ stages:
     variables:
       ${{ if eq(variables['configuration'], 'Debug') }}:
         buildConfiguration: "Debug"
+      imageName: 'myapi1'
+      dockerHub: 'docker-hub'
 
     steps:
     - checkout: self
@@ -130,16 +132,22 @@ stages:
     - task: Docker@2
       displayName: 'Docker Build Images'
       inputs:
+        repository: $(imageName)
         command: 'build'
-        Dockerfile: './src/MyAPI1/Dockerfile'
-        context: '..'
+        Dockerfile: 'src/MyAPI1/Dockerfile'
+        buildContext: 'src'
         tags: |
           $(GitVersion.MajorMinorPatch)
           dev
     - task: Docker@2
       displayName: 'Docker Push Images'
       inputs:
+        containerRegistry: 'docker-hub'
+        repository: $(imageName)
         command: 'push'
+        tags: |
+          $(GitVersion.MajorMinorPatch)
+          dev
     - task: Docker@2
       displayName: Logout of Docker Hub
       inputs:
