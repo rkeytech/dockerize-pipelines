@@ -30,10 +30,10 @@ branches:
     source-branches: []
     tracks-release-branches: true
     is-release-branch: false
-    is-mainline: false
+    is-mainline: true
     pre-release-weight: 0
   release:
-    regex: ^release?[/-]
+    regex: ^release(s)?[/-]
     mode: ContinuousDelivery
     tag: beta
     increment: None
@@ -45,8 +45,8 @@ branches:
     is-mainline: false
     pre-release-weight: 30000
   pull-request:
-    regex: ^(pull|pull\-requests|pr)[/-]
-    mode: ContinuousDelivery
+    regex: ^(pull|pull\-request(s)?|pr)[/-]
+    mode: ContinuousDeployment
     tag: PullRequest
     increment: Inherit
     prevent-increment-of-merged-branch-version: false

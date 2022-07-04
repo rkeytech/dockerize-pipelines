@@ -34,8 +34,8 @@ variables:
 stages:
 - stage: Dockerize_APIs_CI
   jobs:
-  - job: dockerize_apis_ci
-    displayName: 'CI for Dockerize APIs Project'
+  - job: dockerize_apis_ci_build
+    displayName: 'CI for Build Dockerize APIs Projects'
 
     variables:
       ${{ if eq(variables['configuration'], 'Debug') }}:
@@ -92,3 +92,50 @@ stages:
         PathtoPublish: "$(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         publishLocation: Container
         ArtifactName: '$(artifactName)'
+  - job: dockerize_apis_ci_docker
+    displayName: 'CI for Docker Support on Dockerize APIs Projects'
+    dependsOn: [dockerize_apis_ci_build]
+
+    variables:
+      ${{ if eq(variables['configuration'], 'Debug') }}:
+        buildConfiguration: "Debug"
+
+    steps:
+    - checkout: self
+      displayName: 'Checkout code'
+      clean: "true"
+    - task: UseDotNet@2
+      displayName: 'Install DotNet'
+      inputs:
+        packageType: 'sdk'
+        version: 6.x
+    - task: DotNetCoreCLI@2
+      displayName: 'Install DotNet Tools'
+      inputs:
+        command: 'custom'
+        custom: 'tool'
+        arguments: 'restore'
+    - script: |
+        dotnet tool run dotnet-gitversion /output buildserver
+      name: Run_dotnet_gitversion
+      displayName: 'Run GitVersion Tool'
+    - task: Docker@2
+      displayName: Login to Docker Hub
+      inputs:
+        command: login
+        containerRegistry: docker-hub
+    - task: Docker@2
+      inputs:
+        command: 'build'
+        Dockerfile: '**/Dockerfile'
+        tags: |
+          $(GitVersion.MajorMinorPatch)
+          dev
+    - task: Docker@2
+      inputs:
+        command: 'push'
+    - task: Docker@2
+      displayName: Logout of Docker Hub
+      inputs:
+        command: logout
+        containerRegistry: docker-hub
