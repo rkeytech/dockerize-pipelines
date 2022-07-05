@@ -108,7 +108,7 @@ stages:
       - name: gitVer
         value: $[ dependencies.dockerize_apis_ci_build.outputs['setGitVer.gitVer'] ]
       - name: imageName
-        value: myapi1
+        value: dockerize-dotnet-apis
       - name: dockerHub
         value: docker-hub
 
@@ -119,21 +119,6 @@ stages:
     - script: |
        echo $(gitVer)
       displayName: Echo gitVer
-    # - task: UseDotNet@2
-    #   displayName: 'Install DotNet'
-    #   inputs:
-    #     packageType: 'sdk'
-    #     version: 6.x
-    # - task: DotNetCoreCLI@2
-    #   displayName: 'Install DotNet Tools'
-    #   inputs:
-    #     command: 'custom'
-    #     custom: 'tool'
-    #     arguments: 'restore'
-    # - script: |
-    #     dotnet tool run dotnet-gitversion /output buildserver
-    #   name: Run_dotnet_gitversion
-    #   displayName: 'Run GitVersion Tool'
     - task: Docker@2
       displayName: Login to Docker Hub
       inputs:
@@ -143,6 +128,7 @@ stages:
       displayName: 'Docker Build Images'
       inputs:
         command: 'build'
+        repository: 'timoszach/$(imageName)'
         Dockerfile: 'src/MyAPI1/Dockerfile'
         buildContext: 'src'
         tags: |
@@ -151,20 +137,10 @@ stages:
       displayName: 'Docker Push Images'
       inputs:
         containerRegistry: 'docker-hub'
-        repository: 'timoszach/dockerize-dotnet-apis'
+        repository: 'timoszach/$(imageName)'
         command: 'push'
         tags: |
           $(gitVer)
-
-    # - task: Docker@2
-    #   displayName: Build and Push Container
-    #   inputs:
-    #     containerRegistry: 'docker-hub'
-    #     repository: 'timoszach/dockerize-dotnet-apis'
-    #     command: 'buildAndPush'
-    #     Dockerfile: 'src/MyAPI1/Dockerfile'
-    #     buildContext: 'src'
-    #     tags: '$(gitVer)'
     - task: Docker@2
       displayName: Logout of Docker Hub
       inputs:
