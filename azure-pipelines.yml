@@ -36,6 +36,7 @@ variables:
 
 stages:
 - stage: Dockerize_APIs_CI
+  displayName: 'CI for build and Docker Support of Dockerize APIs Solution'
   jobs:
   - job: dockerize_apis_ci_build
     displayName: 'CI for Build Dockerize APIs Projects'
@@ -69,7 +70,7 @@ stages:
       name: Run_dotnet_gitversion
       displayName: 'Run GitVersion Tool'
     - script: |
-       echo "##vso[task.setvariable variable=gitVer;isOutput=true]$(GitVersion.MajorMinorPatch)"
+        echo '##vso[task.setvariable variable=gitVer;isOutput=true]$(GitVersion.MajorMinorPatch)'
       name: setGitVer
       displayName: Set gitVer variable for next jobs
     - task: DotNetCoreCLI@2
