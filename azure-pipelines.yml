@@ -115,6 +115,9 @@ stages:
     - checkout: self
       displayName: 'Checkout code'
       clean: "true"
+    - script: |
+       echo "$(gitVer)"
+      displayName: Echo gitVer
     # - task: UseDotNet@2
     #   displayName: 'Install DotNet'
     #   inputs:
@@ -135,34 +138,33 @@ stages:
       inputs:
         command: login
         containerRegistry: docker-hub
-    # - task: Docker@2
-    #   displayName: 'Docker Build Images'
-    #   inputs:
-    #     repository: $(imageName)
-    #     command: 'build'
-    #     Dockerfile: 'src/MyAPI1/Dockerfile'
-    #     buildContext: 'src'
-    #     tags: |
-    #       $(GitVersion.MajorMinorPatch)
-    #       dev
-    # - task: Docker@2
-    #   displayName: 'Docker Push Images'
-    #   inputs:
-    #     containerRegistry: 'docker-hub'
-    #     repository: $(imageName)
-    #     command: 'push'
-    #     tags: |
-    #       $(GitVersion.MajorMinorPatch)
-    #       dev
     - task: Docker@2
-      displayName: Build and Push Container
+      displayName: 'Docker Build Images'
       inputs:
-        containerRegistry: 'docker-hub'
-        repository: 'timoszach/dockerize-dotnet-apis'
-        command: 'buildAndPush'
+        command: 'build'
         Dockerfile: 'src/MyAPI1/Dockerfile'
         buildContext: 'src'
-        tags: '$(gitVer)'
+        tags: |
+          $(GitVersion.MajorMinorPatch)
+          dev
+    - task: Docker@2
+      displayName: 'Docker Push Images'
+      inputs:
+        containerRegistry: 'docker-hub'
+        repository: timoszach/dockerize-dotnet-apis
+        command: 'push'
+        tags: |
+          $(GitVersion.MajorMinorPatch)
+          dev
+    # - task: Docker@2
+    #   displayName: Build and Push Container
+    #   inputs:
+    #     containerRegistry: 'docker-hub'
+    #     repository: 'timoszach/dockerize-dotnet-apis'
+    #     command: 'buildAndPush'
+    #     Dockerfile: 'src/MyAPI1/Dockerfile'
+    #     buildContext: 'src'
+    #     tags: '$(gitVer)'
     - task: Docker@2
       displayName: Logout of Docker Hub
       inputs:
