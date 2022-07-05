@@ -111,8 +111,8 @@ stages:
       - name: dockerHub
         value: docker-hub
       ${{ if eq(variables['configuration'], 'Debug') }}:
-        - name: buildConfiguration
-          value: "Debug"
+      - name: buildConfiguration
+        value: "Debug"
         
 
     steps:
