@@ -17,7 +17,6 @@ pr:
     include:
       - src/*
       - azure-pipelines.yml
-  drafts: false
 
 name: 'Dockerize_APIs_CI_Pipeline'
 
@@ -28,14 +27,18 @@ variables:
   buildConfiguration: "Release"
   artifactName: "dockerizeAPIs-drop"
   artifactDirProject: "dockerizeAPIs"
-  buildPathRootProject: "src/"
-  buildPathProject: "$(buildPathRootProject)/**/*.csproj"
+  buildPathRootProject: "src"
+  dockerfileContext: "src"
+  buildPathProjects: "$(buildPathRootProject)/**/*.csproj"
+  # dockerfilePathProjects: "$(buildPathRootProject)/**/Dockerfile"
+  registryUsername: 'timoszach'
 
 stages:
 - stage: Dockerize_APIs_CI
+  displayName: 'CI for Dockerize APIs Solution'
   jobs:
-  - job: dockerize_apis_ci
-    displayName: 'CI for Dockerize APIs Project'
+  - job: dockerize_apis_build_and_publish
+    displayName: 'Build and Publish Dockerize APIs Project'
 
     variables:
       ${{ if eq(variables['configuration'], 'Debug') }}:
@@ -65,25 +68,29 @@ stages:
         dotnet tool run dotnet-gitversion /output buildserver
       name: Run_dotnet_gitversion
       displayName: 'Run GitVersion Tool'
+    - script: |
+        echo ##vso[task.setvariable variable=gitVer;isOutput=true]$(GitVersion.MajorMinorPatch)
+      name: setGitVer
+      displayName: 'Set gitVer variable for next jobs' 
     - task: DotNetCoreCLI@2
       displayName: 'Projects | Restore'
       inputs:
         command: 'restore'
-        projects: '$(buildPathProject)'
+        projects: '$(buildPathProjects)'
         feedsToUse: 'config'
         nugetConfigPath: 'NuGet.Config'
     - task: DotNetCoreCLI@2
       displayName: 'Projects | Build'
       inputs:
         command: 'build'
-        projects: '$(buildPathProject)'
+        projects: '$(buildPathProjects)'
         arguments: "--no-restore --configuration $(buildConfiguration) -p:Version=$(GitVersion.SemVer);FileVersion=$(GitVersion.MajorMinorPatch)"
     - task: DotNetCoreCLI@2
       displayName: 'Projects | Publish'
       inputs:
         command: 'publish'
         publishWebProjects: false
-        projects: '$(buildPathProject)'
+        projects: '$(buildPathProjects)'
         arguments: "--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         zipAfterPublish: true
     - task: PublishBuildArtifacts@1
@@ -92,3 +99,81 @@ stages:
         PathtoPublish: "$(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         publishLocation: Container
         ArtifactName: '$(artifactName)'
+
+  - job: dockerize_myapi1_build_and_push_docker
+    displayName: 'Build and Push MyAPI1 to Docker Hub'
+    dependsOn: [dockerize_apis_build_and_publish]
+
+    variables:
+      - name: imageName
+        value: myapi1
+      - name: dockerfilePath
+        value: "$(dockerfileContext)/MyAPI1/Dockerfile"
+      - name: gitVer
+        value: $[ dependencies.dockerize_apis_build_and_publish.outputs['setGitVer.gitVer'] ]
+    steps:
+    - task: Docker@2
+      displayName: 'Login to Docker Hub'
+      inputs:
+        containerRegistry: 'docker-hub'
+        command: 'login'
+    - task: Docker@2
+      displayName: 'Build MyAPI1 Image'
+      inputs:
+        containerRegistry: 'docker-hub'
+        repository: '$(registryUsername)/$(imageName)'
+        command: 'build'
+        Dockerfile: '$(dockerfilePath)'
+        buildContext: $(dockerfileContext)
+        tags: '$(gitVer)'
+    - task: Docker@2
+      displayName: 'Push MyAPI1 Image'
+      inputs:
+        containerRegistry: 'docker-hub'
+        repository: '$(registryUsername)/$(imageName)'
+        command: 'push'
+        tags: '$(gitVer)'
+    - task: Docker@2
+      displayName: 'Logout from Docker Hub'
+      inputs:
+        containerRegistry: 'docker-hub'
+        command: 'logout'
+
+  - job: dockerize_myapi2_build_and_push_docker
+    displayName: 'Build and Push MyAPI2 to Docker Hub'
+    dependsOn: [dockerize_apis_build_and_publish]
+
+    variables:
+      - name: imageName
+        value: myapi2
+      - name: dockerfilePath
+        value: "$(dockerfileContext)/MyAPI2/Dockerfile"
+      - name: gitVer
+        value: $[ dependencies.dockerize_apis_build_and_publish.outputs['setGitVer.gitVer'] ]
+    steps:
+    - task: Docker@2
+      displayName: 'Login to Docker Hub'
+      inputs:
+        containerRegistry: 'docker-hub'
+        command: 'login'
+    - task: Docker@2
+      displayName: 'Build MyAPI2 Image'
+      inputs:
+        containerRegistry: 'docker-hub'
+        repository: '$(registryUsername)/$(imageName)'
+        command: 'build'
+        Dockerfile: '$(dockerfilePath)'
+        buildContext: $(dockerfileContext)
+        tags: '$(gitVer)'
+    - task: Docker@2
+      displayName: 'Push MyAPI2 Image'
+      inputs:
+        containerRegistry: 'docker-hub'
+        repository: '$(registryUsername)/$(imageName)'
+        command: 'push'
+        tags: '$(gitVer)'
+    - task: Docker@2
+      displayName: 'Logout from Docker Hub'
+      inputs:
+        containerRegistry: 'docker-hub'
+        command: 'logout'
