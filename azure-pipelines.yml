@@ -104,12 +104,16 @@ stages:
     dependsOn: [dockerize_apis_ci_build]
 
     variables:
-     - name: gitVer
-        value: $[ dependencies.dockerize_apis_ci_build.outputs['setGitVer.gitVer'] ]
-      ${{ if eq(variables['configuration'], 'Debug') }}:
-        buildConfiguration: "Debug"
-      imageName: 'myapi1'
-      dockerHub: 'docker-hub'
+    - name: gitVer
+      value: $[ dependencies.dockerize_apis_ci_build.outputs['setGitVer.gitVer'] ]
+    - name: imageName
+      value: myapi1
+    - name: dockerHub
+      value: docker-hub
+    ${{ if eq(variables['configuration'], 'Debug') }}:
+      - name: buildConfiguration
+        value: "Debug"
+      
 
     steps:
     - checkout: self
