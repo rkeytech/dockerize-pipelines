@@ -110,10 +110,6 @@ stages:
         value: myapi1
       - name: dockerHub
         value: docker-hub
-      ${{ if eq(variables['configuration'], 'Debug') }}:
-      - name: buildConfiguration
-        value: "Debug"
-        
 
     steps:
     - checkout: self
