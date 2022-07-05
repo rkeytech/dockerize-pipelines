@@ -28,14 +28,18 @@ variables:
   buildConfiguration: "Release"
   artifactName: "dockerizeAPIs-drop"
   artifactDirProject: "dockerizeAPIs"
-  buildPathRootProject: "src/"
+  buildPathRootProject: "src"
+  contextPathRootProject: "src"
   buildPathProject: "$(buildPathRootProject)/**/*.csproj"
+  dockerPathProject: "$(buildPathRootProject)/**/Dockerfile"
+
 
 stages:
 - stage: Dockerize_APIs_CI
+  displayName: 'CI for build and Docker Support of Dockerize APIs Solution'
   jobs:
-  - job: dockerize_apis_ci
-    displayName: 'CI for Dockerize APIs Project'
+  - job: dockerize_apis_ci_build
+    displayName: 'CI for Build Dockerize APIs Projects'
 
     variables:
       ${{ if eq(variables['configuration'], 'Debug') }}:
@@ -65,6 +69,10 @@ stages:
         dotnet tool run dotnet-gitversion /output buildserver
       name: Run_dotnet_gitversion
       displayName: 'Run GitVersion Tool'
+    - script: |
+        echo ##vso[task.setvariable variable=gitVer;isOutput=true]$(GitVersion.MajorMinorPatch)
+      name: setGitVer
+      displayName: Set gitVer variable for next jobs
     - task: DotNetCoreCLI@2
       displayName: 'Projects | Restore'
       inputs:
@@ -92,3 +100,49 @@ stages:
         PathtoPublish: "$(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         publishLocation: Container
         ArtifactName: '$(artifactName)'
+  - job: dockerize_apis_ci_docker
+    displayName: 'CI for Docker Support on Dockerize APIs Projects'
+    dependsOn: [dockerize_apis_ci_build]
+
+    variables:
+      - name: gitVer
+        value: $[ dependencies.dockerize_apis_ci_build.outputs['setGitVer.gitVer'] ]
+      - name: imageName
+        value: dockerize-dotnet-apis
+      - name: dockerHub
+        value: docker-hub
+
+    steps:
+    - checkout: self
+      displayName: 'Checkout code'
+      clean: "true"
+    - script: |
+       echo $(gitVer)
+      displayName: Echo gitVer
+    - task: Docker@2
+      displayName: Login to Docker Hub
+      inputs:
+        command: login
+        containerRegistry: docker-hub
+    - task: Docker@2
+      displayName: 'Docker Build Images'
+      inputs:
+        command: 'build'
+        repository: 'timoszach/$(imageName)'
+        Dockerfile: 'src/MyAPI1/Dockerfile'
+        buildContext: 'src'
+        tags: |
+          $(gitVer)
+    - task: Docker@2
+      displayName: 'Docker Push Images'
+      inputs:
+        containerRegistry: 'docker-hub'
+        repository: 'timoszach/$(imageName)'
+        command: 'push'
+        tags: |
+          $(gitVer)
+    - task: Docker@2
+      displayName: Logout of Docker Hub
+      inputs:
+        command: logout
+        containerRegistry: docker-hub
