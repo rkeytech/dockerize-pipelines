@@ -76,21 +76,21 @@ stages:
       displayName: 'Projects | Restore'
       inputs:
         command: 'restore'
-        projects: '$(buildPathProject)'
+        projects: '$(buildPathProjects)'
         feedsToUse: 'config'
         nugetConfigPath: 'NuGet.Config'
     - task: DotNetCoreCLI@2
       displayName: 'Projects | Build'
       inputs:
         command: 'build'
-        projects: '$(buildPathProject)'
+        projects: '$(buildPathProjects)'
         arguments: "--no-restore --configuration $(buildConfiguration) -p:Version=$(GitVersion.SemVer);FileVersion=$(GitVersion.MajorMinorPatch)"
     - task: DotNetCoreCLI@2
       displayName: 'Projects | Publish'
       inputs:
         command: 'publish'
         publishWebProjects: false
-        projects: '$(buildPathProject)'
+        projects: '$(buildPathProjects)'
         arguments: "--no-build --no-restore --configuration $(buildConfiguration) --framework net6.0 --output $(Build.ArtifactStagingDirectory)/$(artifactDirProject)"
         zipAfterPublish: true
     - task: PublishBuildArtifacts@1
