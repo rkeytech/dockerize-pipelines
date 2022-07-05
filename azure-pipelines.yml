@@ -129,25 +129,33 @@ stages:
       inputs:
         command: login
         containerRegistry: docker-hub
+    # - task: Docker@2
+    #   displayName: 'Docker Build Images'
+    #   inputs:
+    #     repository: $(imageName)
+    #     command: 'build'
+    #     Dockerfile: 'src/MyAPI1/Dockerfile'
+    #     buildContext: 'src'
+    #     tags: |
+    #       $(GitVersion.MajorMinorPatch)
+    #       dev
+    # - task: Docker@2
+    #   displayName: 'Docker Push Images'
+    #   inputs:
+    #     containerRegistry: 'docker-hub'
+    #     repository: $(imageName)
+    #     command: 'push'
+    #     tags: |
+    #       $(GitVersion.MajorMinorPatch)
+    #       dev
     - task: Docker@2
-      displayName: 'Docker Build Images'
-      inputs:
-        repository: $(imageName)
-        command: 'build'
-        Dockerfile: 'src/MyAPI1/Dockerfile'
-        buildContext: 'src'
-        tags: |
-          $(GitVersion.MajorMinorPatch)
-          dev
-    - task: Docker@2
-      displayName: 'Docker Push Images'
       inputs:
         containerRegistry: 'docker-hub'
-        repository: $(imageName)
-        command: 'push'
-        tags: |
-          $(GitVersion.MajorMinorPatch)
-          dev
+        repository: 'dockerize-dotnet-apis'
+        command: 'buildAndPush'
+        Dockerfile: 'src/MyAPI1/Dockerfile'
+        buildContext: '..'
+        tags: '$(GitVersion.MajorMinorPatch)'
     - task: Docker@2
       displayName: Logout of Docker Hub
       inputs:
