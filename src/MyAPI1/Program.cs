@@ -25,7 +25,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 // Request Localization
-var supportedCultures = new[] { "en-US", "el-GR" };
+var supportedCultures = new[] { "en-US", "el-GR", "es-ES"};
 var localizationOptions = new RequestLocalizationOptions().SetDefaultCulture(supportedCultures[0])
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
